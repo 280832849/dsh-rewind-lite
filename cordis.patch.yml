@@ -1,0 +1,9 @@
+# dsh-rewind-lite bundle patch：一个 insert 注册本插件。
+# insert.id 必须与包名一致（client 半侧按 id 解析 __ModuleLoader__ 条目）；
+# insert.name 是包名，profile 的 node_modules 会解析到 lib/index.js。
+- insert:
+    - id: dsh-rewind-lite
+      name: dsh-rewind-lite
+      config:
+        enabled: true
+        idleTimeoutMs: 15000
