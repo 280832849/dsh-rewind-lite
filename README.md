@@ -1,10 +1,13 @@
 # dsh-rewind-lite
 
-DeepSeek Harness 插件：**同窗口内就地回退对话到任意更早的用户消息**，只往会话日志追加一条标记，不新建分支、不删改历史；被撤回的原提示词自动回填输入框，改完直接重发。
+DeepSeek Harness (DSH) 插件：**同窗口内就地回退对话到任意更早的用户消息**，只往会话日志追加一条标记，不新建分支、不删改历史；被撤回的原提示词自动回填输入框，改完直接重发。附带**文件还原**：回退时把 AI 改过的文件恢复成改动前，目标之后新建的文件删掉。
 
-本地自研维护版：不依赖第三方仓库，代码在本地，DSH 升级后由维护者（DSH 里的 AI 助手）负责适配。
+In-window conversation rewind for DeepSeek Harness: jump back to any earlier user message without forking the session; the withdrawn prompt returns to the composer for editing. Optional file restore brings AI-edited files back to their pre-edit state.
 
-## 已实现（0.1.0）
+- 纯插件实现：调的是官方扩展点（`session.append` + `surfaceOp.replace`、`commands`、`slots`、`commandUi.decorate`、`tools/*` 事件），不改 DSH 客户端代码。
+- 行为对齐 Claude Code 的 `/rewind`，但只做一件事：就地回退（不建分支、不留副本）。
+
+## 已实现（0.4.0）
 
 | 能力 | 状态 |
 |---|---|
@@ -21,21 +24,27 @@ DeepSeek Harness 插件：**同窗口内就地回退对话到任意更早的用�
 
 ## 安装
 
-```sh
-# 本机开发目录打包
-cd "…/dsh-rewind-lite" && npm pack
+要求：DSH `>=0.2.1-rc.2 <0.3.0-0`，Node 22+。
 
-# 装进 desktop profile（本地路径依赖）
-dsh plugin --profile desktop add "file:…/dsh-rewind-lite/dsh-rewind-lite-0.1.0.tgz"
+```sh
+# 方式一：直接从 GitHub 装（推荐）
+dsh plugin --profile desktop add "github:280832849/dsh-rewind-lite"
+
+# 方式二：本地打包安装
+npm install && npm run build && npm pack
+dsh plugin --profile desktop add "file:$PWD/dsh-rewind-lite-0.4.0.tgz"
 ```
 
-desktop profile 是 `patchReload: live`，装完插件后端热加载；**客户端那半侧需要刷新页面**才生效。
+装完**重启 DSH**（宿主半侧在新的 boot 组装时加载），再刷新页面（客户端半侧）。
 
 卸载：
 
 ```sh
 dsh plugin --profile desktop remove dsh-rewind-lite
 ```
+
+> 若 `dsh plugin add` 报 `ERR_PNPM_UNEXPECTED_STORE`（profile 的 node_modules 与 dsh 转发的 pnpm 版本不一致），用同版本 pnpm 包一层再执行：
+> `PATH=<pnpm11 shim>:$PATH dsh plugin --profile desktop add …`。
 
 ## 使用
 
@@ -97,3 +106,11 @@ npm pack           # 出 tgz，供 dsh plugin add
 ```
 
 **升版本前必须先跑测试**：`test/session.test.mjs` 用真的 `@deepseek-ai/dsh-session` 验证「追加标记 = 表面截断」，这个测试挂了就说明 SDK 语义变了，插件必须改，不能硬装。
+
+## 致谢
+
+思路与兼容性经验来自 [SiriLee/dsh-rewind](https://github.com/SiriLee/dsh-rewind)（MIT）：本项目的回退语义、客户端隐藏行与输入框回填的做法与其一致，代码为独立实现，只保留「就地回退 + 轻量文件快照」这一件事。
+
+## License
+
+MIT
